@@ -1,0 +1,94 @@
+  ---
+  title: "ReproducibleResearch - Course Project 1"
+  author: "Xinyu GUO"
+  date: "July 18, 2021"
+  output: html_document
+  ---
+
+  ```{r,echo=TRUE}
+  knitr::opts_chunk$set(warning=FALSE)
+  ```
+
+  1 Code for reading in the dataset and/or processing the data
+  ```{r, echo = TRUE}
+  library(ggplot2)
+  activity <- read.csv("C:\\activity.csv")
+  #load the data
+  activity$date <- as.POSIXct(activity$date, "%Y-%m-%d")
+  weekday <- weekdays(activity$date)
+  activity <- cbind(activity,weekday)
+  summary(activity)
+  ```
+
+  2 Histogram of the total number of steps taken each day
+  ```{r, echo = TRUE}
+  activity_total_steps <- with(activity, aggregate(steps, by = list(date), FUN = sum, na.rm = TRUE))
+  names(activity_total_steps) <- c("date", "steps")
+  hist(activity_total_steps$steps, main = "Total number of steps taken per day", xlab = "Total steps taken per day", col = "green", ylim = c(0,20), breaks = seq(0,25000, by=2500))
+  ```
+
+  3 Mean number of steps taken each day
+  ```{r, echo = TRUE}
+  mean(activity_total_steps$steps)
+  ```
+
+  Median number of steps taken each day
+  ```{r, echo = TRUE}
+  median(activity_total_steps$steps)
+  ```
+
+  4 Time series plot of the average number of steps taken
+  ```{r, echo = TRUE}
+  average_daily_activity <- aggregate(activity$steps, by=list(activity$interval), FUN=mean, na.rm=TRUE)
+  names(average_daily_activity) <- c("interval", "mean")
+  plot(average_daily_activity$interval, average_daily_activity$mean, type = "l", col="green", lwd = 2, xlab="Interval", ylab="Average number of steps", main="Average number of steps per intervals")
+  ```
+
+  5 The 5-minute interval that, on average, contains the maximum number of steps
+  ```{r, echo = TRUE}
+  average_daily_activity[which.max(average_daily_activity$mean), ]$interval
+  ```
+
+  6 Code to describe and show a strategy for imputing missing data
+  Mean value substitution strategy was used to impute missing values. 
+  ```{r, echo = TRUE}
+  sum(is.na(activity$steps))
+  imputed_steps <- average_daily_activity$mean[match(activity$interval, average_daily_activity$interval)]
+  activity_imputed <- transform(activity, steps = ifelse(is.na(activity$steps), yes = imputed_steps, no = activity$steps))
+  total_steps_imputed <- aggregate(steps ~ date, activity_imputed, sum)
+  names(total_steps_imputed) <- c("date", "daily_steps")
+  ```
+
+  7 Histogram of the total number of steps taken each day after missing values are imputed
+  ```{r, echo = TRUE}
+  hist(total_steps_imputed$daily_steps, col = "darkblue", xlab = "Total steps per day", ylim = c(0,30), main = "Total number of steps taken each day", breaks = seq(0,25000,by=2500))
+  ```
+
+  Here is the mean of the total number of steps taken per day:
+  ```{r, echo = TRUE}
+  mean(total_steps_imputed$daily_steps)
+  ```
+  Here is the mean of the total number of steps taken per day:
+
+  ```{r, echo = TRUE}
+  median(total_steps_imputed$daily_steps)
+  ```
+
+  8 Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends
+  ```{r, echo = TRUE}
+  activity$date <- as.Date(strptime(activity$date, format="%Y-%m-%d"))
+  activity$day <- weekdays(activity$date)
+  for (i in 1:nrow(activity)) {
+      if (activity[i,]$day %in% c("Saturday","Sunday")) {
+          activity[i,]$day<-"weekend"
+      }
+      else{
+          activity[i,]$day<-"weekday"
+      }
+  }
+  stepsByDay <- aggregate(activity$steps ~ activity$interval + activity$day, activity, mean)
+  names(stepsByDay) <- c("interval", "day", "steps")
+  library(lattice)
+  xyplot(steps ~ interval | day, stepsByDay, type = "l", layout = c(1, 2), 
+      xlab = "Interval", ylab = "Number of steps")
+  ```
