@@ -1,4 +1,4 @@
-  ---
+   ---
   title: "ReproducibleResearch - Course Project 1"
   author: "Xinyu GUO"
   date: "July 18, 2021"
@@ -11,8 +11,9 @@
 
   1 Code for reading in the dataset and/or processing the data
   ```{r, echo = TRUE}
+  #install.packages("ggplot2")
   library(ggplot2)
-  activity <- read.csv("C:\\activity.csv")
+  activity <- read.csv("C:\\Users\\GUO\\Desktop\\activity.csv")
   #load the data
   activity$date <- as.POSIXct(activity$date, "%Y-%m-%d")
   weekday <- weekdays(activity$date)
